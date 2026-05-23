@@ -1,16 +1,15 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-const ProtectedRoute = ({ children }) => {
+export default function ProtectedRoute({ children }) {
+  // Check if an operator token sits in local browser storage matrices
   const token = localStorage.getItem('access_token');
-  
-  // Direct authentication check hook. Implement structural refresh cycles within API interceptors.
+
   if (!token) {
-    // For local evaluation, fake an active session if needed, or route to a login page
-    return children; 
+    // If unauthenticated, intercept the pipeline and force-route to login
+    return <Navigate to="/login" replace />;
   }
 
+  // If token is present, let the secure page child views render smoothly
   return children;
-};
-
-export default ProtectedRoute;
+}

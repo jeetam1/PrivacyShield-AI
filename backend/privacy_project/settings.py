@@ -84,11 +84,15 @@ WSGI_APPLICATION = "privacy_project.wsgi.application"
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'Jeetamhero@12',
+        'HOST': 'db.ttoioodqvqmilbzzoccm.supabase.co', # Or your Supabase host address
+        'PORT': '5432',                             # Standard default PostgreSQL port
     }
-}
+}   
 
 
 # Password validation

@@ -8,9 +8,11 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.db.models import Count, Avg
 
+# CORE WORKSPACE IMPORTS
 from .pii_detector import detect_and_mask
 from .risk_calculator import calculate_risk
 from .models import ScanHistory
+from .serializers import ScanHistorySerializer # <-- FIXED: Added this crucial missing import link!
 
 
 @api_view(['GET', 'POST'])
@@ -34,6 +36,7 @@ def scan_text(request):
     # Persist Scan Log Trace
     ScanHistory.objects.create(
         user=request.user,
+        filename="Direct Text Input Block", # Dynamic string property mapping for the history table link
         original_text=text,
         masked_text=masked_text,
         risk_score=risk_score,
@@ -52,7 +55,7 @@ def scan_text(request):
 @permission_classes([AllowAny])
 def register(request):
     """
-    Creates standard platform accounts securely with proper exception handling.
+    Creates standard platform accounts securely with proper serialization error filtering layers.
     """
     username = request.data.get('username', '').strip()
     email = request.data.get('email', '').strip()
@@ -74,7 +77,7 @@ def register(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # AllowAny for effortless initial testing
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def upload_file(request):
     """
@@ -99,17 +102,10 @@ def upload_file(request):
         masked_text, detected = detect_and_mask(content)
         risk_score, risk_level = calculate_risk(detected)
 
-        # Fallback to map data if testing anonymously
-        if request.user.is_authenticated:
-            exec_user = request.user
-        else:
-            exec_user = User.objects.first()
-            if not exec_user:
-                exec_user = User.objects.create_user(username="system_agent", email="agent@shield.io", password="SafePassword123!")
-
-        # Save to database record trace
+        # Save to database record trace explicitly bound to the active login session
         ScanHistory.objects.create(
-            user=exec_user,
+            user=request.user,
+            filename=filename,
             original_text=content,
             masked_text=masked_text,
             risk_score=risk_score,
@@ -132,43 +128,71 @@ def upload_file(request):
 
 class ScanHistoryListView(generics.ListAPIView):
     """
-    API endpoint that fetches historical scanning actions for the frontend UI.
+    API view endpoint that queries historical scan traces scoped 
+    strictly to the authenticated clearance profile operator.
     """
-    permission_classes = [AllowAny]
-    
-    def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            queryset = ScanHistory.objects.filter(user=request.user)
-        else:
-            queryset = ScanHistory.objects.all()
+    serializer_class = ScanHistorySerializer
+    permission_classes = [IsAuthenticated]
 
-        data = [{
-            "id": item.id,
-            "filename": f"scan_log_{item.id}.txt",
-            "original_text": item.original_text,
-            "masked_text": item.masked_text,
-            "risk_score": item.risk_score,
-            "risk_level": item.risk_level,
-            "created_at": item.created_at
-        } for item in queryset]
-        
-        return Response(data, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        # Explicitly scope the query filter constraint to the active user session token
+        return ScanHistory.objects.filter(user=self.request.user).order_by('-created_at')
 
 
 class AdminSystemAnalyticsView(views.APIView):
     """
-    Aggregates global analytics vectors for dashboard presentation pipelines.
+    Aggregates global analytics metrics scoped securely to the active operator instance session.
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        total_scans = ScanHistory.objects.count()
-        risk_distributions = ScanHistory.objects.values('risk_level').annotate(count=Count('id'))
-        average_risk_matrix = ScanHistory.objects.aggregate(average=Avg('risk_score'))
+        user = request.user
+        
+        # Admin metrics toggle fallback handler filter logic block
+        if user.is_staff:
+            user_scans = ScanHistory.objects.all()
+        else:
+            user_scans = ScanHistory.objects.filter(user=user)
+
+        total_scans = user_scans.count()
+        risk_distributions = user_scans.values('risk_level').annotate(count=Count('id'))
+        average_risk_matrix = user_scans.aggregate(average=Avg('risk_score'))
+        
+        # Re-structure the response fields to pair accurately with dashboard charts
+        distribution_map = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
+        for item in risk_distributions:
+            if item['risk_level'] in distribution_map:
+                distribution_map[item['risk_level']] = item['count']
         
         payload = {
             "total_scans": total_scans,
-            "risk_distribution_breakdown": {item['risk_level']: item['count'] for item in risk_distributions},
+            "risk_distribution_breakdown": distribution_map,
             "system_mean_score": average_risk_matrix['average'] or 0.0
         }
         return Response(payload, status=status.HTTP_200_OK)
+
+
+class UserProfileView(views.APIView):
+    """
+    Returns the authenticated operator's account details and system telemetry metrics.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        user_scans = ScanHistory.objects.filter(user=user)
+        
+        # Calculate dynamic operator statistics
+        total_volume = user_scans.count()
+        critical_interceptions = user_scans.filter(risk_level="HIGH").count()
+        
+        return Response({
+            "username": user.username,
+            "email": user.email,
+            "date_joined": user.date_joined.strftime("%B %d, %Y"),
+            "is_staff": user.is_staff,
+            "stats": {
+                "total_volume": total_volume,
+                "critical_volume": critical_interceptions,
+            }
+        }, status=status.HTTP_200_OK)

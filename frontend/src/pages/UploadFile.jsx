@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { UploadCloud, ShieldAlert, FileText, CheckCircle2, RefreshCw, ArrowRight } from 'lucide-react';
 import { scannerService } from '../services/api';
 
-const UploadFile = () => {
+export default function UploadFile() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [scanResult, setScanResult] = useState(null);
@@ -30,103 +31,146 @@ const UploadFile = () => {
       const response = await scannerService.upload(formData);
       setScanResult(response.data);
     } catch (err) {
-      setErrorMessage(err.response?.data?.error || "An unexpected error occurred during document processing.");
+      setErrorMessage(err.response?.data?.error || "An unexpected error occurred during document token analysis.");
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div className="p-8 text-slate-100 min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-black mb-2 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-400">
-          Secure Ingestion Gate
-        </h1>
-        <p className="text-slate-400 mb-8">
-          Upload document assets to automatically scrub out structural PII parameters before serialization routines.
-        </p>
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased selection:bg-blue-500/10">
+      <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
+        
+        {/* Professional Minimalist Header Group */}
+        <div className="border-b border-slate-200 pb-6">
+          <div className="flex items-center gap-2 text-blue-600 text-xs font-bold tracking-widest uppercase mb-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
+            Secure Ingestion Subsystem
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">
+            Secure Data Ingestion Gate
+          </h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">
+            Automated compliance processing engine for sensitive document structural masking.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Upload Parameter Panel */}
-          <div className="p-6 h-fit rounded-2xl border border-white/10 bg-slate-900/30 backdrop-blur-xl shadow-2xl">
+        {/* Workspace Grid Split */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left Block: Ingestion File Control Card */}
+          <div className="lg:col-span-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm shadow-slate-100">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 font-mono">Ingestion Source</h3>
+            
             <form onSubmit={executeDataShieldScan} className="space-y-4">
-              <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-teal-500/50 transition-colors cursor-pointer relative">
+              <div className="group border border-dashed border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl p-8 text-center transition-all cursor-pointer relative bg-slate-50/50">
                 <input 
                   type="file" 
                   accept=".txt,.csv" 
                   onChange={handleFileChange} 
                   className="absolute inset-0 opacity-0 cursor-pointer" 
                 />
-                <p className="text-sm text-slate-300 font-medium">
-                  {file ? file.name : "Select Document Block"}
+                <UploadCloud className="mx-auto h-8 w-8 text-slate-400 group-hover:text-blue-600 transition-colors mb-3" />
+                <p className="text-xs font-bold text-slate-700">
+                  {file ? file.name : "Select or Drop Document"}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">Accepts raw text or CSV strings</p>
+                <p className="text-[10px] text-slate-400 mt-1 font-mono">Plain Text or CSV format</p>
               </div>
 
               {errorMessage && (
-                <div className="p-3 bg-red-500/20 text-red-300 rounded-lg text-xs border border-red-500/30">
-                  {errorMessage}
+                <div className="p-3 bg-rose-50 border border-rose-100 rounded-lg flex items-start gap-2">
+                  <ShieldAlert className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-rose-600 font-mono leading-relaxed">{errorMessage}</p>
                 </div>
               )}
 
               <button 
                 type="submit" 
                 disabled={!file || uploading} 
-                className="w-full py-3 px-4 rounded-xl font-bold text-sm text-center bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-slate-950 tracking-wide transition-all disabled:opacity-40 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-center transition-all focus:outline-none bg-slate-900 hover:bg-slate-800 text-white disabled:opacity-30 disabled:pointer-events-none shadow-sm shadow-slate-950/10"
               >
-                {uploading ? "Sanitizing Core Components..." : "Deploy Threat Purge Pipeline"}
+                {uploading ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    Analyzing Data...
+                  </>
+                ) : (
+                  <>
+                    Deploy Purge Pipeline
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
               </button>
             </form>
           </div>
 
-          {/* Verification Inspection Pipeline View */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Right Block: Output & Inspection Terminal Panels */}
+          <div className="lg:col-span-8">
             <AnimatePresence mode="wait">
               {scanResult ? (
                 <motion.div 
-                  initial={{ opacity: 0, scale: 0.98 }} 
-                  animate={{ opacity: 1, scale: 1 }} 
-                  exit={{ opacity: 0 }} 
-                  className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-2xl shadow-2xl space-y-6"
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm shadow-slate-100"
                 >
-                  <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-200">{scanResult.filename}</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">Threat Level Assessment Completed Successfully</p>
+                  {/* Results Top Meta Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100 text-emerald-600">
+                        <CheckCircle2 className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 font-mono">{scanResult.filename}</h4>
+                        <p className="text-[11px] text-slate-400 font-medium">Token remediation sequence completed</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase ${scanResult.risk_level === 'HIGH' ? 'bg-red-500/20 text-red-400 border border-red-500/40' : scanResult.risk_level === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'}`}>
-                        {scanResult.risk_level} Risk ({scanResult.risk_score}/100)
+                    <div>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase border font-mono ${scanResult.risk_level === 'HIGH' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                        {scanResult.risk_level} Risk Level ({scanResult.risk_score}/100)
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Clean Visual Columns View Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Original Data Matrix</label>
-                      <div className="p-4 rounded-xl bg-slate-950/60 font-mono text-xs h-64 overflow-y-auto whitespace-pre-wrap text-slate-400 border border-white/5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-3.5 w-3.5 text-slate-400" />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-mono">Original Source Payload</label>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 font-mono text-[11px] leading-relaxed h-80 overflow-y-auto whitespace-pre-wrap text-slate-600">
                         {scanResult.original_text}
                       </div>
                     </div>
+                    
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Scrubbed Data Layout</label>
-                      <div className="p-4 rounded-xl bg-slate-950/80 font-mono text-xs h-64 overflow-y-auto whitespace-pre-wrap text-emerald-400 border border-emerald-500/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-3.5 w-3.5 text-blue-600" />
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block font-mono">Sanitized Output Matrix</label>
+                      </div>
+                      <div className="p-4 rounded-xl bg-slate-950 border border-slate-900 font-mono text-[11px] leading-relaxed h-80 overflow-y-auto whitespace-pre-wrap text-emerald-400 selection:bg-emerald-500/10">
                         {scanResult.masked_text}
                       </div>
                     </div>
                   </div>
                 </motion.div>
               ) : (
-                <div className="h-full flex items-center justify-center p-12 border border-white/5 bg-white/[0.02] rounded-2xl text-slate-500 text-sm font-medium">
-                  Awaiting analytical transaction execution...
+                <div className="h-[400px] flex flex-col items-center justify-center border border-slate-200 bg-white rounded-2xl text-center p-8 shadow-sm shadow-slate-100">
+                  <div className="p-4 rounded-full bg-slate-50 border border-slate-100 text-slate-400 mb-4">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-700 uppercase tracking-wide font-mono">Awaiting Data Ingestion Session</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-xs font-medium">
+                    Upload a valid plaintext report asset from the control unit to trigger deep AI masking layers.
+                  </p>
                 </div>
               )}
             </AnimatePresence>
           </div>
+
         </div>
       </div>
     </div>
   );
-};
-
-export default UploadFile;
+}
