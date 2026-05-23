@@ -14,7 +14,6 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchDashboardMetrics() {
       try {
-        // Fetch telemetry counts and history logs simultaneously
         const [statsRes, historyRes] = await Promise.all([
           scannerService.getAdminStats(),
           scannerService.getHistory()
@@ -145,41 +144,66 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* --- BRAND NEW HISTORY LOGS TABLE SECTION --- */}
-        {/* <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 pb-4 border-b border-slate-100 mb-4">
-            <Clock className="h-4 w-4 text-blue-600" />
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Historical Operation Ingestion Logs</h3>
+        {/* Upgraded System Audit Trail */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-100/50 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-slate-400" />
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
+              System Audit Trail / Historical Ingestions
+            </h3>
           </div>
 
           {history.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse m-0">
                 <thead>
-                  <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                    <th className="py-3 px-4">Log ID</th>
-                    <th className="py-3 px-4">Target File Target</th>
-                    <th className="py-3 px-4">Threat Index Score</th>
-                    <th className="py-3 px-4">Remediation Status</th>
-                    <th className="py-3 px-4">Timestamp Trace</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                    <th className="py-3.5 px-6 select-none">Log ID</th>
+                    <th className="py-3.5 px-6 select-none">Document Descriptor</th>
+                    <th className="py-3.5 px-6 select-none">Threat Score</th>
+                    <th className="py-3.5 px-6 select-none">Remediation Status</th>
+                    <th className="py-3.5 px-6 select-none text-right">Timestamp Trace</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 text-xs text-slate-600 font-medium">
+                <tbody className="divide-y divide-slate-100 text-xs text-slate-600 font-medium font-sans">
                   {history.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-400">#00{item.id}</td>
-                      <td className="py-3.5 px-4 flex items-center gap-2 text-slate-800 font-mono">
-                        <FileDown className="h-3.5 w-3.5 text-slate-400" />
-                        {item.filename || `scan_stream_${item.id}.txt`}
+                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="py-4 px-6 font-mono text-[11px] text-slate-400 font-bold">
+                        #{String(item.id).padStart(4, '0')}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`inline-block px-2 py-0.5 rounded font-mono font-bold text-[10px] ${item.risk_level === 'HIGH' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                      
+                      <td className="py-4 px-6 font-mono text-[11px] text-slate-900 font-semibold group-hover:text-blue-600 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <FileDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                          {item.filename || "raw_stream_buffer.txt"}
+                        </div>
+                      </td>
+                      
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-mono font-bold text-[10px] uppercase tracking-wide border ${
+                          item.risk_level === 'HIGH' 
+                            ? 'bg-rose-50 text-rose-600 border-rose-100' 
+                            : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        }`}>
                           {item.risk_score} / 100
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-semibold text-emerald-600">Suppressed & Masked</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px]">
-                        {new Date(item.created_at).toLocaleString()}
+                      
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                          <span className={`h-1.5 w-1.5 rounded-full ${item.risk_level === 'HIGH' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                          Suppressed & Saved
+                        </div>
+                      </td>
+                      
+                      <td className="py-4 px-6 text-right font-mono text-[11px] text-slate-400">
+                        {new Date(item.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -187,94 +211,13 @@ export default function Dashboard() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-10 text-slate-400 text-xs font-mono">
-              NO COMPLIANCE AUDIT TRACES DETECTED IN STORAGE.
+            <div className="text-center py-12 text-slate-400 text-xs font-mono tracking-wide">
+              NO SECURITY INCIDENT HISTORICAL LOGS REPORTED
             </div>
           )}
         </div>
 
       </div>
-    </div>
-  );
-} */}
-
-{/* --- UPGRADED PROFESSIONAL HISTORY SECTION --- */}
-<div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm shadow-slate-100/50 overflow-hidden">
-  <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-    <Clock className="h-4 w-4 text-slate-400" />
-    <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
-      System Audit Trail / Historical Ingestions
-    </h3>
-  </div>
-
-  {history.length > 0 ? (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse m-0">
-        <thead>
-          <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
-            <th className="py-3.5 px-6 select-none">Log ID</th>
-            <th className="py-3.5 px-6 select-none">Document Descriptor</th>
-            <th className="py-3.5 px-6 select-none">Threat Score</th>
-            <th className="py-3.5 px-6 select-none">Remediation Status</th>
-            <th className="py-3.5 px-6 select-none text-right">Timestamp Trace</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 text-xs text-slate-600 font-medium font-sans">
-          {history.map((item) => (
-            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
-              {/* Clean Monospace ID Tag */}
-              <td className="py-4 px-6 font-mono text-[11px] text-slate-400 font-bold">
-                #{String(item.id).padStart(4, '0')}
-              </td>
-              
-              {/* File Descriptor Link style */}
-              <td className="py-4 px-6 font-mono text-[11px] text-slate-900 font-semibold group-hover:text-blue-600 transition-colors">
-                <div className="flex items-center gap-2">
-                  <FileDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                  {item.filename || "raw_stream_buffer.txt"}
-                </div>
-              </td>
-              
-              {/* Dynamic Status Badges */}
-              <td className="py-4 px-6">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-mono font-bold text-[10px] uppercase tracking-wide border ${
-                  item.risk_level === 'HIGH' 
-                    ? 'bg-rose-50 text-rose-600 border-rose-100' 
-                    : 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                }`}>
-                  {item.risk_score} / 100
-                </span>
-              </td>
-              
-              <td className="py-4 px-6">
-                <div className="flex items-center gap-1.5 text-slate-500 font-medium">
-                  <span className={`h-1.5 w-1.5 rounded-full ${item.risk_level === 'HIGH' ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-                  Suppressed & Saved
-                </div>
-              </td>
-              
-              {/* Clean formatted dates positioned on the right */}
-              <td className="py-4 px-6 text-right font-mono text-[11px] text-slate-400">
-                {new Date(item.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <div className="text-center py-12 text-slate-400 text-xs font-mono tracking-wide">
-      NO SECURITY INCIDENT HISTORICAL LOGS REPORTED
-    </div>
-  )}
-</div>
-</div>
     </div>
   );
 }

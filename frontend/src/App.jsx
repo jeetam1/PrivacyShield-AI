@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import Guide from './pages/Docs/Guide';
 // Page Structural Views Mapping
 import Home from './pages/Home'; // Dynamic explanation lander
 import Login from './pages/Login'; // Professional login card panel
@@ -74,9 +74,11 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public Authentication Screens */}
-        <Route path="/" element={<Home />} /> {/* Points seamlessly to your new project explanation layout */}
+        <Route path="/" element={<Home />} /> 
+        <Route path="/guide" element={<Guide />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} /> {/* <-- Add this explicit route! */}
+        <Route path="/register" element={<Register />} /> 
+        
         {/* Secure Operational Workspace Pages */}
         <Route 
           path="/*" 

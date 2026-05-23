@@ -1,175 +1,192 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ArrowRight, UploadCloud, Cpu, Layers, Database, Lock, EyeOff } from 'lucide-react';
+import { Shield, ArrowRight, Layers, LogIn, BookOpen, CheckCircle2, Zap, Lock } from 'lucide-react';
+import gatewayNodes from '../assets/gateway-nodes.png'; 
 
 export default function Home() {
   const navigate = useNavigate();
+  
+  // Coordinate tracking state matrices
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
+  const [hoverType, setHoverType] = useState("default"); // Handles different cursor styles ("default", "button", "logo")
 
-  const features = [
-    {
-      icon: <Cpu className="h-5 w-5 text-blue-600" />,
-      title: "Hybrid AI Engine",
-      description: "Combines high-performance Regex matchers with cutting-edge spaCy Natural Language Processing (NLP) models to identify names, locations, and structural organization tokens."
-    },
-    {
-      icon: <Layers className="h-5 w-5 text-indigo-600" />,
-      title: "Contextual Masking",
-      description: "Intelligent data suppression engine that selectively replaces target PII data points with explicit placeholders like [NAME_MASKED] while safeguarding structural template layouts."
-    },
-    {
-      icon: <Database className="h-5 w-5 text-emerald-600" />,
-      title: "Telemetry Tracking",
-      description: "Logs compliance data arrays securely into relational database nodes, generating instant threat indices and systemic risk analytics metrics across operational workloads."
-    }
-  ];
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
 
-  const steps = [
-    {
-      num: "01",
-      title: "Authenticate Profile",
-      description: "Access the platform through our secure JWT authorization gateway to initialize your unprivileged operator command terminal node session."
-    },
-    {
-      num: "02",
-      title: "Ingest Document Asset",
-      description: "Drop plain text reports or spreadsheet data logs directly into the Data Ingestion Gate. The pipeline reads the binary string streams dynamically."
-    },
-    {
-      num: "03",
-      title: "Review & Audit Metrics",
-      description: "Examine the high-visibility comparison dashboard side-by-side. Track structural threat trajectories, system risk limits, and global compliance scores instantly."
-    }
-  ];
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
 
-  return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans antialiased selection:bg-blue-500/10 overflow-x-hidden">
-      
-      {/* Background Decorative Tech Grids */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-
-      {/* Top Professional Header Bar */}
-      <header className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between border-b border-slate-100 relative z-10 bg-white/80 backdrop-blur-md sticky top-0">
-        <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-slate-900 cursor-pointer" onClick={() => navigate('/')}>
-          <Shield className="h-6 w-6 text-blue-600 fill-blue-600/10" />
-          PrivacyShield<span className="text-blue-600 font-medium text-sm">.ai</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition-colors px-4 py-2"
-          >
-            Console Dashboard
-          </button>
-          <button 
-            onClick={() => navigate('/login')}
-            className="text-xs font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-slate-950/10"
-          >
-            Secure Portal Login
-          </button>
-        </div>
-      </header>
-
-      {/* Section 1: Hero Pitch Workspace */}
-      <section className="max-w-7xl mx-auto px-8 pt-20 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
-        <div className="lg:col-span-5 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold tracking-wide uppercase font-mono">
-            Enterprise Compliance Gateway
-          </div>
-          <h1 className="text-5xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.05]">
-            Sanitize Data. <br />
-            Secure <span className="text-blue-600 italic font-serif font-normal">Privacy.</span>
-          </h1>
-          <p className="text-base text-slate-500 font-medium max-w-md leading-relaxed">
-            Automated corporate document vector serialization. Scrub personal metrics and structural identifier records before cloud processing.
-          </p>
-          <div className="pt-4 flex items-center gap-4">
-            <button
-  onClick={() => {
-    // Check if an active security token exists in local storage matrices
+  const handleAccessPortal = () => {
     const token = localStorage.getItem('access_token');
     if (token) {
-      navigate('/upload'); // Authorized: Let them drop right into the workspace
+      navigate('/upload');
     } else {
-      navigate('/login');  // Unauthorized: Send them to your crisp centered login page first
+      navigate('/login');
     }
-  }}
-  className="group inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider px-8 py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:translate-y-[-1px] active:translate-y-[0px]"
->
-  Access Ingestion Portal
-  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-</button>
-          </div>
-        </div>
+  };
 
-        {/* Right Collage Graphic Framework */}
-        <div className="lg:col-span-7 relative flex justify-center lg:justify-end">
-          <div className="relative border border-slate-200/80 bg-slate-50/50 p-6 rounded-3xl shadow-2xl max-w-xl grid grid-cols-2 gap-4 backdrop-blur-sm z-10">
-            <div className="rounded-2xl overflow-hidden shadow-md border border-white aspect-[4/3] relative group">
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10" />
-              <div className="absolute bottom-3 left-3 z-20 text-white font-mono text-[10px] tracking-wider uppercase flex items-center gap-1.5"><Lock className="h-3 w-3 text-blue-400" /> Dynamic Protection</div>
-              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" alt="Team" className="w-full h-full object-cover" />
-            </div>
-            <div className="rounded-2xl overflow-hidden shadow-md border border-white aspect-[4/3] relative group">
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10" />
-              <div className="absolute bottom-3 left-3 z-20 text-white font-mono text-[10px] tracking-wider uppercase flex items-center gap-1.5"><EyeOff className="h-3 w-3 text-emerald-400" /> Vector Suppression</div>
-              <img src="https://images.unsplash.com/photo-1542744094-2ab25be78b90?auto=format&fit=crop&w=400&q=80" alt="Analytics" className="w-full h-full object-cover" />
-            </div>
-          </div>
-          <div className="absolute top-12 right-12 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        </div>
-      </section>
+  return (
+    <div className="h-screen w-screen bg-white text-slate-800 font-sans antialiased overflow-hidden flex flex-col justify-between selection:bg-blue-500/10 relative group">
+      
+      {/* ==============================
+           DYNAMIC REACTION CURSOR RING
+         ============================== */}
+      <div 
+        className="hidden md:block fixed pointer-events-none z-[9999] rounded-full transition-all duration-300 ease-out -translate-x-1/2 -translate-y-1/2"
+        style={{
+          left: `${mousePos.x}px`,
+          top: `${mousePos.y}px`,
+          // Dynamically change sizing, borders, and colors based on the current hover state
+          width: hoverType === "button" ? '54px' : hoverType === "logo" ? '40px' : '20px',
+          height: hoverType === "button" ? '54px' : hoverType === "logo" ? '40px' : '20px',
+          backgroundColor: hoverType === "button" ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+          border: hoverType === "button" ? '2px dashed #2563eb' : hoverType === "logo" ? '2px solid #10b981' : '2px solid #3b82f6',
+          boxShadow: hoverType === "button" ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'none'
+        }}
+      />
+      
+      {/* Laser sharp cursor center focal point */}
+      <div 
+        className={`hidden md:block fixed pointer-events-none z-[9999] w-2 h-2 rounded-full -translate-x-1/2 -translate-y-1/2 transition-all duration-200 ${
+          hoverType === "logo" ? "bg-emerald-500 scale-125" : "bg-blue-600"
+        }`}
+        style={{
+          left: `${mousePos.x}px`,
+          top: `${mousePos.y}px`,
+        }}
+      />
 
-      {/* Section 2: What is it? (Brief Explanation) */}
-      <section className="bg-slate-50 border-y border-slate-200/60 py-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
-            <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest font-mono">System Architecture</h2>
-            <p className="text-3xl font-black tracking-tight text-slate-900">What is PrivacyShield AI?</p>
-            <p className="text-sm text-slate-500 font-medium leading-relaxed">
-              PrivacyShield AI is an intelligent data intermediary platform designed to neutralize compliance risks. It parses raw document text blocks, highlights privacy vulnerability vectors, and overwrites plaintext elements automatically before data leaves your organization.
+      {/* ==============================
+           FIXED HEADER (NAVBAR)
+         ============================== */}
+      <header className="bg-white border-b border-slate-100 flex-shrink-0 relative z-10">
+        <nav className="max-w-7xl mx-auto px-8 py-3.5 flex items-center justify-between">
+          
+          {/* Logo Brand Interaction Tracker */}
+          <div 
+            onClick={() => navigate('/')} 
+            onMouseEnter={() => setHoverType("logo")}
+            onMouseLeave={() => setHoverType("default")}
+            className="flex items-center gap-3 cursor-pointer transition-transform hover:scale-[1.01]"
+          >
+            <div className="bg-blue-600 p-1.5 rounded-lg text-white shadow-sm shadow-blue-600/20">
+              <Shield className="h-4.5 w-4.5" />
+            </div>
+            <span className="text-base font-black text-slate-900 tracking-tight">
+              PrivacyShield <span className="text-xs font-semibold text-blue-600">.ai</span>
+            </span>
+          </div>
+
+          {/* Main Navigation (Tracking Hovers) */}
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => navigate('/guide')} 
+              onMouseEnter={() => setHoverType("button")}
+              onMouseLeave={() => setHoverType("default")}
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 tracking-wide uppercase hover:text-blue-600 transition-colors py-2 px-1"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Platform Manual
+            </button>
+
+            <button 
+              onClick={() => navigate('/dashboard')} 
+              onMouseEnter={() => setHoverType("button")}
+              onMouseLeave={() => setHoverType("default")}
+              className="text-[11px] font-bold text-slate-600 tracking-wide uppercase hover:text-blue-600 transition-colors py-2 px-1"
+            >
+              Console Dashboard
+            </button>
+            
+            <button 
+              onClick={() => navigate('/login')}
+              onMouseEnter={() => setHoverType("button")}
+              onMouseLeave={() => setHoverType("default")}
+              className="group inline-flex items-center gap-2 bg-slate-950 text-white font-bold text-[11px] uppercase tracking-wider px-5 py-2.5 rounded-full border border-slate-950 hover:bg-white hover:text-slate-950 hover:border-slate-300 shadow-md transition-all duration-300"
+            >
+              <LogIn className="w-3 h-3" />
+              Secure Portal Login
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-500 border border-white group-hover:bg-emerald-400 transition-all"></span>
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* ==============================
+           DYNAMIC HERO CONTAINER
+         ============================== */}
+      <main className="flex-grow flex items-center max-w-7xl mx-auto px-8 w-full h-full max-h-[calc(100vh-65px)] relative z-10">
+        <div className="grid grid-cols-12 items-center gap-12 w-full lg:mb-4">
+          
+          {/* Text Left Column */}
+          <div className="col-span-12 md:col-span-5 space-y-6 lg:space-y-7">
+            <div className="inline-block bg-blue-50 text-blue-700 font-bold text-[9px] uppercase tracking-wider px-3.5 py-1 rounded-full border border-blue-100/60 shadow-sm">
+              <Zap className="w-2.5 h-2.5 text-blue-500 inline mr-1" />
+              Enterprise Compliance Gateway
+            </div>
+            
+            <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black text-slate-950 leading-[1.12] tracking-tighter">
+              Sanitize Data. <br />
+              <span className="text-slate-700">Secure</span>{' '}
+              <span className="text-blue-600 font-serif italic font-medium tracking-tight pr-1">Privacy.</span>
+            </h1>
+            
+            <p className="text-xs lg:text-sm text-slate-600 leading-relaxed max-w-sm font-medium">
+              Automated corporate document vector serialization. Scrub personal metrics and structural identifier records before cloud processing cascades.
             </p>
-          </div>
+            
+            <div className="pt-1">
+              <button 
+                onClick={handleAccessPortal}
+                onMouseEnter={() => setHoverType("button")}
+                onMouseLeave={() => setHoverType("default")}
+                className="group inline-flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] uppercase tracking-wider px-6 py-4 rounded-xl shadow-lg shadow-blue-600/10 transition-all hover:translate-y-[-1px] active:translate-y-[0px]"
+              >
+                Access Ingestion Portal
+                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feat, idx) => (
-              <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm shadow-slate-100 space-y-4">
-                <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl inline-block">
-                  {feat.icon}
-                </div>
-                <h4 className="text-base font-bold text-slate-900">{feat.title}</h4>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">{feat.description}</p>
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4 max-w-sm">
+              <div className="flex items-center gap-2 text-slate-600 font-semibold text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>Zero-Retention Parsing</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Section 3: How to Use It? (Step-by-Step Flow) */}
-      <section className="py-20 relative z-10 bg-white">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="text-center max-w-xl mx-auto mb-16 space-y-2">
-            <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest font-mono">Operational Playbook</h2>
-            <p className="text-3xl font-black tracking-tight text-slate-900">How to Use the System</p>
-            <p className="text-sm text-slate-500 font-medium">Follow these core steps to execute secure document threat cleansing operations.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-            {steps.map((step, idx) => (
-              <div key={idx} className="space-y-4 relative group">
-                <div className="text-5xl font-black text-slate-100 font-mono tracking-tight group-hover:text-blue-50/80 transition-colors">
-                  {step.num}
-                </div>
-                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide font-mono flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-                  {step.step_title || step.title}
-                </h4>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">{step.description}</p>
+              <div className="flex items-center gap-2 text-slate-600 font-semibold text-xs">
+                <Lock className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>Supabase Encryption</span>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+          
+          {/* Image Right Column */}
+          <div className="col-span-12 md:col-span-7 relative max-h-[50vh] md:max-h-[75vh] flex items-center justify-center">
+            <div className="absolute inset-4 bg-gradient-to-tr from-blue-500/5 to-emerald-500/5 blur-3xl rounded-full" />
+            
+            <div className="overflow-hidden rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/40 max-h-full flex items-center justify-center bg-white relative z-10">
+              <img 
+                src={gatewayNodes} 
+                alt="Advanced Data Node Network" 
+                className="w-full max-h-full object-contain transform scale-95" 
+              />
+            </div>
+            
+            <div className="absolute bottom-6 left-10 inline-flex items-center gap-2 bg-slate-900/95 text-white font-bold text-[9px] uppercase tracking-wider px-3.5 py-2 rounded-xl shadow-lg z-20 border border-slate-800">
+              <Layers className="w-3 h-3 text-emerald-400" />
+              System Status: Active
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+          </div>
 
+        </div>
+      </main>
+
+      <footer className="h-4 flex-shrink-0 w-full" />
     </div>
   );
 }
