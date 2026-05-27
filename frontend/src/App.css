@@ -1,0 +1,46 @@
+/* ==========================================================================
+   GLOBAL STYLE RESETS & COMPLIANCE RULES
+   ========================================================================== */
+
+/* Configure root CSS variables matching your premium minimalist design palette */
+:root {
+  --border: #f1f5f9;         /* Smooth slate-100 separation borders */
+  --text-main: #334155;      /* High-contrast slate-700 body copy text */
+  --text-heading: #0f172a;   /* Rich slate-900 absolute dark headings */
+  --selection-bg: #3b82f61a; /* Soft sapphire selection overlay alpha layer */
+}
+
+/* Ensure smooth interactive behaviors globally across layout viewports */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff !important; /* Forces background to stay pure white */
+  color: var(--text-main);
+  overflow-x: hidden; /* Prevents unwanted horizontal layout breaking wiggle loops */
+}
+
+/* ==========================================================================
+   CUSTOM MOUSE CURSOR SUPPRESSION MATRIX
+   ========================================================================== */
+
+/* Hide the default Windows system arrow tracking icon on desktop monitors 
+   so it doesn't overlap or distort your custom elastic trailing blue dot!
+*/
+@media (min-width: 768px) {
+  html, 
+  body, 
+  button, 
+  a, 
+  input,
+  div[onClick] {
+    cursor: none !important;
+  }
+}
+
+/* ==========================================================================
+   OPTIONAL TEXT SELECTION OPTIMIZATION
+   ========================================================================== */
+::selection {
+  background-color: var(--selection-bg);
+  color: inherit;
+}
