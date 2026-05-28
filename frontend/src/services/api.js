@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 const API = axios.create({
   baseURL: isLocalhost 
     ? 'http://127.0.0.1:8000/api' 
-    : 'https://your-django-app.onrender.com/api',
+    : 'https://privacy-shield-ai.onrender.com/api',
 });
 
 // 2. Outgoing Security Interceptor: Inject JWT token into headers automatically
