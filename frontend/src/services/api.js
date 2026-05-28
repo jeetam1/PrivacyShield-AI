@@ -3,9 +3,8 @@ import { jwtDecode } from 'jwt-decode';
 
 // 1. Centralized Axios Instance with Base Configurations
 const API = axios.create({
-  baseURL: isLocalhost 
-    ? 'http://127.0.0.1:8000/api' 
-    : 'https://privacyshield-ai.onrender.com/api',
+  
+    baseURL : 'https://privacyshield-ai.onrender.com/api',
     
 });
 
