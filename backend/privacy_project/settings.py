@@ -137,7 +137,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 CORS_ALLOWED_ORIGINS = [
     "https://privacy-shield-ai-ten.vercel.app",
     #"https://your-frontend-domain.vercel.app", # Replace with your real Vercel URL
-    "http://localhost:5173",
+    # "http://localhost:5173",
 ]
 CORS_ALLOWED_ORIGINS += [
     "http://localhost:3000",
@@ -145,3 +145,4 @@ CORS_ALLOWED_ORIGINS += [
 ]
 # Allow authorization tokens to pass across origins
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
