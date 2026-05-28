@@ -3,7 +3,9 @@ import { jwtDecode } from 'jwt-decode';
 
 // 1. Centralized Axios Instance with Base Configurations
 const API = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api', // Maps directly to your running Django Dev Server
+  baseURL: isLocalhost 
+    ? 'http://127.0.0.1:8000/api' 
+    : 'https://your-django-app.onrender.com/api',
 });
 
 // 2. Outgoing Security Interceptor: Inject JWT token into headers automatically

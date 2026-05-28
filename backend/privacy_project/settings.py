@@ -135,7 +135,8 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Whitelist the React Vite frontend development port
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend-domain.vercel.app", # Replace with your real Vercel URL
+    "https://privacy-shield-ai-ten.vercel.app",
+    #"https://your-frontend-domain.vercel.app", # Replace with your real Vercel URL
     "http://localhost:5173",
 ]
 
