@@ -9,6 +9,9 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
+
+import os
+from pathlib import Path
 MEDIA_URL='/media/'
 
 MEDIA_ROOT='media'
@@ -25,10 +28,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-1k88nzdyu)z&ud(&wm657o&&3&e*b7wcy5yq(i&13*b7x21q=f"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
 
 # Application definition
 
@@ -130,10 +132,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Whitelist the React Vite frontend development port
 CORS_ALLOWED_ORIGINS = [
+    "https://your-frontend-domain.vercel.app", # Replace with your real Vercel URL
     "http://localhost:5173",
-    "http://127.0.0.1:5173",
 ]
 
 # Allow authorization tokens to pass across origins
