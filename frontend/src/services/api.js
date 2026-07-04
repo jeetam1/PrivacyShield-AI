@@ -57,7 +57,7 @@ import { jwtDecode } from 'jwt-decode';
 // 1. Centralized Axios Instance with Base Configurations
 // Django requires a trailing slash for route matching.
 const API = axios.create({
-    baseURL: 'https://privacyshield-ai.onrender.com/api/',
+    baseURL: import.meta.env.VITE_API_URL || 'https://privacyshield-ai.onrender.com/api/',
 });
 
 // 2. Outgoing Security Interceptor: Inject JWT token into headers automatically
