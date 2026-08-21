@@ -37,7 +37,7 @@ MEDIA_ROOT='media'
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-1k88nzdyu)z&ud(&wm657o&&3&e*b7wcy5yq(i&13*b7x21q=f"
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-local-dev-fallback-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
@@ -111,9 +111,9 @@ if DATABASE_URL:
     
     db_config = {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': url.path[1:],
-        'USER': url.username,
-        'PASSWORD': url.password,
+        'NAME': urlparse.unquote(url.path[1:]) if url.path else 'postgres',
+        'USER': urlparse.unquote(url.username or 'postgres'),
+        'PASSWORD': urlparse.unquote(url.password or ''),
         'HOST': url.hostname,
         'PORT': url.port or '5432',
     }
@@ -132,12 +132,12 @@ if DATABASE_URL:
         'default': db_config
     }
 else:
-    db_host = os.environ.get('DB_HOST', 'db.ttoioodqvqmilbzzoccm.supabase.co')
+    db_host = os.environ.get('DB_HOST', '')
     db_config = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'postgres'),
         'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'Jeetamhero@12'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': db_host,
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
