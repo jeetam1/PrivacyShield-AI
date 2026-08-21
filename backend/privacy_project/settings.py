@@ -27,7 +27,9 @@ if env_path.exists():
                 key, val = line.split('=', 1)
                 # Strip optional quotes
                 val = val.strip('\'"')
-                os.environ.setdefault(key.strip(), val)
+                os.environ[key.strip()] = val
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL='/media/'
 MEDIA_ROOT='media'
