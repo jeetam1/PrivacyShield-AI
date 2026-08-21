@@ -1,3 +1,30 @@
-.env
+# Python Bytecode & Cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# SQLite Database
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+
+# Static & Media Files
+staticfiles/
+media/uploads/*
+!media/uploads/.gitkeep
+media/*
+!media/.gitkeep
+
+# Logs
+*.log
