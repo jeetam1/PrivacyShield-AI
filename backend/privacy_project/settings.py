@@ -104,14 +104,25 @@ WSGI_APPLICATION = "privacy_project.wsgi.application"
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # Database Configuration supporting both DATABASE_URL and individual variables
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip().strip('\'"')
+
+# Strip accidental variable prefix if pasted directly into value field on Render
+if DATABASE_URL.startswith('DATABASE_URL='):
+    DATABASE_URL = DATABASE_URL[len('DATABASE_URL='):].strip().strip('\'"')
+elif DATABASE_URL.startswith('database_url='):
+    DATABASE_URL = DATABASE_URL[len('database_url='):].strip().strip('\'"')
+
+if DATABASE_URL and '://' in DATABASE_URL:
     url = urlparse.urlparse(DATABASE_URL)
     query_params = urlparse.parse_qs(url.query)
     
+    db_name = url.path.lstrip('/') if url.path else 'postgres'
+    if not db_name or '/' in db_name:
+        db_name = 'postgres'
+    
     db_config = {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': urlparse.unquote(url.path[1:]) if url.path else 'postgres',
+        'NAME': urlparse.unquote(db_name),
         'USER': urlparse.unquote(url.username or 'postgres'),
         'PASSWORD': urlparse.unquote(url.password or ''),
         'HOST': url.hostname,
@@ -132,14 +143,18 @@ if DATABASE_URL:
         'default': db_config
     }
 else:
-    db_host = os.environ.get('DB_HOST', '')
+    db_host = os.environ.get('DB_HOST', '').strip().strip('\'"')
+    db_name = os.environ.get('DB_NAME', 'postgres').strip().strip('\'"')
+    if not db_name or '://' in db_name:
+        db_name = 'postgres'
+        
     db_config = {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'postgres'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'NAME': db_name,
+        'USER': os.environ.get('DB_USER', 'postgres').strip().strip('\'"'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '').strip().strip('\'"'),
         'HOST': db_host,
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'PORT': os.environ.get('DB_PORT', '5432').strip().strip('\'"'),
     }
     
     if 'supabase' in db_host:
