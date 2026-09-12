@@ -14,6 +14,7 @@ export default function PdfMasker() {
   // Modals
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showSupportedModal, setShowSupportedModal] = useState(false);
   const [showGuideBanner, setShowGuideBanner] = useState(true);
 
   // PDF State
