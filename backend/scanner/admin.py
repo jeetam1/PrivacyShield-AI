@@ -1,7 +1,1 @@
-from django.contrib import admin
-from .models import ScanHistory
-
-
-admin.site.register(
-    ScanHistory
-)
+# Stateless application - no admin models registered.

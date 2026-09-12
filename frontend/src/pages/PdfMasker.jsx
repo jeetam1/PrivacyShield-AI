@@ -1129,6 +1129,147 @@ Please ensure all sensitive identity records are redacted before forwarding this
         )}
       </AnimatePresence>
 
+      {/* ========================================================================= */}
+      {/* 5. "SUPPORTED DATA TYPES" MODAL DIALOG */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {showSupportedModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                    <Layers className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Supported Sensitive Data</h3>
+                    <p className="text-xs text-slate-500">All 8 PII categories detected & masked automatically</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowSupportedModal(false)}
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs text-slate-600 leading-relaxed">
+                
+                <p className="text-slate-700">
+                  PrivacyShield uses a combination of precise regular expressions and Named Entity Recognition (NER) to detect and mask these confidential items:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>Indian Aadhaar Cards</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">12-digit UIDAI identity numbers.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. 4321 8765 2109 → XXXX XXXX 2109
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>Indian PAN Cards</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">10-digit alphanumeric tax IDs.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. ABCDE1234F → XXXXX1234X
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>US Social Security Numbers</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">9-digit US SSN identifier.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. 123-45-6789 → XXX-XX-6789
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>Credit & Debit Cards</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">16-digit Visa, Mastercard, Amex.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. 4532-7589-1234-5678 → XXXX-XXXX-XXXX-5678
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>Email Addresses</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">Personal & corporate email domains.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. user@gmail.com → xxxx@xxxx.com
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>Phone & Mobile Numbers</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">Indian (+91) & international phone numbers.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. +91 9876543210 → +91 XXXXXXXX10
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>Full Names (People)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">Names of individuals via NLP model.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. Rajesh Kumar Sharma → XXXX XXXX XXXX
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-2 font-bold text-slate-900 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      <span>Geographic Locations & Cities</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-1.5">Cities, states, regions, countries.</p>
+                    <span className="font-mono text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded text-blue-800">
+                      e.g. Mumbai, California → [LOCATION] / XXXX
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button
+                  onClick={() => setShowSupportedModal(false)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold"
+                >
+                  Got It
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

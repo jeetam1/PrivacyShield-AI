@@ -1,198 +1,149 @@
 import os
-from rest_framework import status, generics, views
+import json
+import base64
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.parsers import MultiPartParser, FormParser
-from django.contrib.auth.models import User
-from django.db import IntegrityError
-from django.db.models import Count, Avg
+from rest_framework.permissions import AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.http import HttpResponse
 
-# CORE WORKSPACE IMPORTS
+from .pdf_masker import redact_pdf_stream, text_to_pdf_bytes, text_to_formatted_pdf
 from .pii_detector import detect_and_mask
 from .risk_calculator import calculate_risk
-from .models import ScanHistory
-from .serializers import ScanHistorySerializer # <-- FIXED: Added this crucial missing import link!
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def scan_text(request):
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
     """
-    Accepts raw text blocks, processes structural PII, updates compliance metrics,
-    and returns sanitized data payloads.
+    Public health check endpoint.
     """
-    if request.method == "GET":
-        return Response({"status": "healthy", "engine": "PrivacyShield AI running"}, status=status.HTTP_200_OK)
-
-    text = request.data.get("text", "").strip()
-    if not text:
-        return Response({"error": "Text payload field cannot be empty."}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Core Analysis Execution
-    masked_text, detected = detect_and_mask(text)
-    risk_score, risk_level = calculate_risk(detected)
-
-    # Persist Scan Log Trace
-    ScanHistory.objects.create(
-        user=request.user,
-        filename="Direct Text Input Block", # Dynamic string property mapping for the history table link
-        original_text=text,
-        masked_text=masked_text,
-        risk_score=risk_score,
-        risk_level=risk_level
-    )
-
     return Response({
-        "masked_text": masked_text,
-        "detected": detected,
-        "risk_score": risk_score,
-        "risk_level": risk_level
+        "status": "online",
+        "engine": "PrivacyShield-AI PDF Redaction Engine",
+        "version": "2.0.0 (Stateless / Zero-Database)"
     }, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def register(request):
-    """
-    Creates standard platform accounts securely with proper serialization error filtering layers.
-    """
-    username = request.data.get('username', '').strip()
-    email = request.data.get('email', '').strip()
-    password = request.data.get('password', '')
-
-    # Basic Request Sanitization Layer
-    if not username or not password or not email:
-        return Response({"error": "All parameter fields (username, email, password) are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        # Django automatically handles password hashing securely via create_user
-        User.objects.create_user(username=username, email=email, password=password)
-        return Response({"message": "User profile successfully provisioned."}, status=status.HTTP_201_CREATED)
-        
-    except IntegrityError:
-        return Response({"error": "An operator with that username profile already exists inside the database registry."}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as system_fault:
-        return Response({"error": f"Registration sequence execution aborted: {str(system_fault)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
-def upload_file(request):
+def mask_pdf(request):
     """
-    Validates, reads, and anonymizes file stream payloads dynamically.
+    Receives a PDF or plain text document, detects sensitive PII entities (Aadhaar, PAN, Emails,
+    Phone Numbers, Names, Locations, Organizations), applies irreversible PDF bounding-box
+    redactions, and returns the sanitized document payload with detection telemetry.
     """
     uploaded_file = request.FILES.get('file')
     if not uploaded_file:
-        return Response({"error": "No data stream parameter located under key 'file'."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "No file stream provided under key 'file'."}, status=status.HTTP_400_BAD_REQUEST)
 
     filename = uploaded_file.name
     _, extension = os.path.splitext(filename.lower())
-    
-    if extension not in ['.txt', '.csv']:
-        return Response({"error": f"This direct ingestion route does not support format variations matching '{extension}'."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if extension not in ['.pdf', '.txt']:
+        return Response({"error": f"Invalid file type '{extension}'. Supported document formats: .pdf, .txt"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        content = uploaded_file.read().decode('utf-8', errors='ignore')
-        if not content.strip():
-            return Response({"error": "Target processed source document file cannot be blank."}, status=status.HTTP_400_BAD_REQUEST)
+        raw_bytes = uploaded_file.read()
+        if not raw_bytes:
+            return Response({"error": "Uploaded file is empty."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Threat Remediation Routing Steps
-        masked_text, detected = detect_and_mask(content)
-        risk_score, risk_level = calculate_risk(detected)
+        # Parse user-configured masking toggles
+        mask_options = {
+            "names": request.data.get('mask_names', 'true').lower() == 'true',
+            "emails": request.data.get('mask_emails', 'true').lower() == 'true',
+            "phones": request.data.get('mask_phones', 'true').lower() == 'true',
+            "ids": request.data.get('mask_ids', 'true').lower() == 'true',
+            "locations": request.data.get('mask_locations', 'true').lower() == 'true',
+            "orgs": request.data.get('mask_orgs', 'false').lower() == 'true',
+        }
+        redaction_style = request.data.get('redaction_style', 'xxxx')
 
-        # Save to database record trace explicitly bound to the active login session
-        ScanHistory.objects.create(
-            user=request.user,
-            filename=filename,
-            original_text=content,
-            masked_text=masked_text,
-            risk_score=risk_score,
-            risk_level=risk_level
-        )
+        if extension == '.txt':
+            text_str = raw_bytes.decode('utf-8', errors='ignore')
+            # 1. Sanitize text directly using configured mask options
+            masked_text, detected_counts, detected_items = detect_and_mask(text_str, options=mask_options, mask_style=redaction_style)
+            risk_score, risk_level = calculate_risk(detected_counts)
+            
+            # 2. Render into a clean, properly formatted, high-res PDF
+            redacted_pdf_bytes = text_to_formatted_pdf(masked_text)
+            redacted_pdf_base64 = base64.b64encode(redacted_pdf_bytes).decode('utf-8')
+            data_uri = f"data:application/pdf;base64,{redacted_pdf_base64}"
+            
+            base_name, _ = os.path.splitext(filename)
+            output_filename = f"{base_name}_masked.pdf"
+
+            return Response({
+                "filename": filename,
+                "output_filename": output_filename,
+                "total_pages": 1,
+                "detected_counts": detected_counts,
+                "detected_items": [{"token": item["token"], "category": item["category"], "page": 1, "occurrences": 1} for item in detected_items],
+                "risk_score": risk_score,
+                "risk_level": risk_level,
+                "redacted_pdf_data": data_uri,
+                "redacted_size_bytes": len(redacted_pdf_bytes),
+            }, status=status.HTTP_200_OK)
+
+        # Standard PDF pipeline
+        pdf_bytes = raw_bytes
+        result = redact_pdf_stream(pdf_bytes, options=mask_options, redaction_style=redaction_style)
+
+        # Encode redacted PDF to Base64 for instant browser rendering & download
+        redacted_pdf_base64 = base64.b64encode(result["redacted_pdf_bytes"]).decode('utf-8')
+        data_uri = f"data:application/pdf;base64,{redacted_pdf_base64}"
+
+        base_name, _ = os.path.splitext(filename)
+        output_filename = f"{base_name}_masked.pdf"
 
         return Response({
             "filename": filename,
-            "original_text": content,
-            "masked_text": masked_text,
-            "detected": detected,
-            "risk_score": risk_score,
-            "risk_level": risk_level
-        }, status=status.HTTP_201_CREATED)
-
-    except Exception as process_err:
-        print(f"!!! CRITICAL INGESTION CRASH LOG: {str(process_err)}")
-        return Response({"error": f"Internal process exception: {str(process_err)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class ScanHistoryListView(generics.ListAPIView):
-    """
-    API view endpoint that queries historical scan traces scoped 
-    strictly to the authenticated clearance profile operator.
-    """
-    serializer_class = ScanHistorySerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        # Explicitly scope the query filter constraint to the active user session token
-        return ScanHistory.objects.filter(user=self.request.user).order_by('-created_at')
-
-
-class AdminSystemAnalyticsView(views.APIView):
-    """
-    Aggregates global analytics metrics scoped securely to the active operator instance session.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        
-        # Admin metrics toggle fallback handler filter logic block
-        if user.is_staff:
-            user_scans = ScanHistory.objects.all()
-        else:
-            user_scans = ScanHistory.objects.filter(user=user)
-
-        total_scans = user_scans.count()
-        risk_distributions = user_scans.values('risk_level').annotate(count=Count('id'))
-        average_risk_matrix = user_scans.aggregate(average=Avg('risk_score'))
-        
-        # Re-structure the response fields to pair accurately with dashboard charts
-        distribution_map = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
-        for item in risk_distributions:
-            if item['risk_level'] in distribution_map:
-                distribution_map[item['risk_level']] = item['count']
-        
-        payload = {
-            "total_scans": total_scans,
-            "risk_distribution_breakdown": distribution_map,
-            "system_mean_score": average_risk_matrix['average'] or 0.0
-        }
-        return Response(payload, status=status.HTTP_200_OK)
-
-
-class UserProfileView(views.APIView):
-    """
-    Returns the authenticated operator's account details and system telemetry metrics.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        user_scans = ScanHistory.objects.filter(user=user)
-        
-        # Calculate dynamic operator statistics
-        total_volume = user_scans.count()
-        critical_interceptions = user_scans.filter(risk_level="HIGH").count()
-        
-        return Response({
-            "username": user.username,
-            "email": user.email,
-            "date_joined": user.date_joined.strftime("%B %d, %Y"),
-            "is_staff": user.is_staff,
-            "stats": {
-                "total_volume": total_volume,
-                "critical_volume": critical_interceptions,
-            }
+            "output_filename": output_filename,
+            "total_pages": result["total_pages"],
+            "detected_counts": result["total_counts"],
+            "detected_items": result["detected_items"],
+            "risk_score": result["risk_score"],
+            "risk_level": result["risk_level"],
+            "redacted_pdf_data": data_uri,
+            "redacted_size_bytes": len(result["redacted_pdf_bytes"]),
         }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"PDF Redaction Error: {str(e)}")
+        return Response({"error": f"Failed to process and redact PDF: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@parser_classes([JSONParser, MultiPartParser, FormParser])
+def mask_text(request):
+    """
+    Sanitizes raw text strings directly without any persistence layer.
+    """
+    text = request.data.get("text", "").strip()
+    if not text:
+        return Response({"error": "Text payload cannot be empty."}, status=status.HTTP_400_BAD_REQUEST)
+
+    mask_options = {
+        "names": str(request.data.get('mask_names', 'true')).lower() == 'true',
+        "emails": str(request.data.get('mask_emails', 'true')).lower() == 'true',
+        "phones": str(request.data.get('mask_phones', 'true')).lower() == 'true',
+        "ids": str(request.data.get('mask_ids', 'true')).lower() == 'true',
+        "locations": str(request.data.get('mask_locations', 'true')).lower() == 'true',
+        "organizations": str(request.data.get('mask_orgs', 'false')).lower() == 'true',
+    }
+    mask_style = request.data.get('mask_style', 'xxxx')
+
+    masked_text, detected_counts, detected_items = detect_and_mask(text, options=mask_options, mask_style=mask_style)
+    risk_score, risk_level = calculate_risk(detected_counts)
+
+    return Response({
+        "original_text": text,
+        "masked_text": masked_text,
+        "detected_counts": detected_counts,
+        "detected_items": detected_items,
+        "risk_score": risk_score,
+        "risk_level": risk_level
+    }, status=status.HTTP_200_OK)
