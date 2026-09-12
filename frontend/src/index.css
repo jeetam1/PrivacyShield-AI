@@ -2,5 +2,7 @@
 
 body {
   margin: 0;
-  background-color: #020617; /* Slate-950 default background safety lock */
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
