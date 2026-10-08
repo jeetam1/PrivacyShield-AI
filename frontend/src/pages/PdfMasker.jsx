@@ -146,6 +146,25 @@ Please ensure all sensitive identity records are redacted before forwarding this
     setTextError('');
   };
 
+  const handleLoadSampleDocument = () => {
+    const file = new File([SAMPLE_TEST_TEXT], 'test.txt', { type: 'text/plain' });
+    setPdfFile(file);
+    setPdfError('');
+    setPdfResult(null);
+  };
+
+  const handleDownloadSampleFile = () => {
+    const blob = new Blob([SAMPLE_TEST_TEXT], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'test.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // PDF Submission Handler
   const handleMaskPdf = async (e) => {
     if (e) e.preventDefault();
@@ -455,24 +474,42 @@ Please ensure all sensitive identity records are redacted before forwarding this
             <div className="lg:col-span-5 space-y-4">
               <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-5">
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                     <UploadCloud className="h-4 w-4 text-blue-600" />
                     Upload Document
                   </h3>
-                  {pdfFile && (
+                  <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => {
-                        setPdfFile(null);
-                        setPdfResult(null);
-                        setPdfError('');
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                      type="button"
+                      onClick={handleLoadSampleDocument}
+                      className="text-xs px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Load built-in test.txt document for instant testing"
                     >
-                      <X className="h-3.5 w-3.5" /> Remove
+                      <Sparkles className="h-3.5 w-3.5 text-blue-600" /> Load Sample test.txt
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      onClick={handleDownloadSampleFile}
+                      className="text-xs px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Download test.txt to test file upload"
+                    >
+                      <Download className="h-3.5 w-3.5 text-slate-500" /> test.txt
+                    </button>
+                    {pdfFile && (
+                      <button
+                        onClick={() => {
+                          setPdfFile(null);
+                          setPdfResult(null);
+                          setPdfError('');
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1 ml-1 cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" /> Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Dropzone */}
@@ -524,6 +561,18 @@ Please ensure all sensitive identity records are redacted before forwarding this
                         <p className="text-xs text-slate-500 mt-1">
                           Supports PDF (.pdf) and plain text (.txt)
                         </p>
+                        <div className="mt-3 flex items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLoadSampleDocument();
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold transition-colors cursor-pointer"
+                          >
+                            <Sparkles className="h-3.5 w-3.5 text-blue-600" /> Use Sample test.txt
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -759,9 +808,17 @@ Please ensure all sensitive identity records are redacted before forwarding this
                   <button
                     type="button"
                     onClick={handleLoadSample}
-                    className="text-xs px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-medium flex items-center gap-1.5 transition-colors"
+                    className="text-xs px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" /> Load Sample test.txt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadSampleFile}
+                    className="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Download test.txt to your computer"
+                  >
+                    <Download className="h-3.5 w-3.5 text-slate-500" /> Download test.txt
                   </button>
                   {rawText && (
                     <button

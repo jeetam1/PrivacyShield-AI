@@ -79,6 +79,8 @@ def mask_pdf(request):
                 "filename": filename,
                 "output_filename": output_filename,
                 "total_pages": 1,
+                "original_text": text_str,
+                "masked_text": masked_text,
                 "detected_counts": detected_counts,
                 "detected_items": [{"token": item["token"], "category": item["category"], "page": 1, "occurrences": 1} for item in detected_items],
                 "risk_score": risk_score,

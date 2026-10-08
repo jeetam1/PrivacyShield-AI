@@ -1,13 +1,54 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, ShieldAlert, FileText, CheckCircle2, RefreshCw, ArrowRight } from 'lucide-react';
+import { UploadCloud, ShieldAlert, FileText, CheckCircle2, RefreshCw, ArrowRight, Sparkles } from 'lucide-react';
 import { scannerService } from '../services/api';
+
+const SAMPLE_TEST_TEXT = `CONFIDENTIAL EMPLOYEE VERIFICATION & AUDIT REPORT
+
+Date: 12th September 2026
+Prepared By: Samantha Reed
+Organization: Apex Global Technologies Ltd.
+Location: Mumbai, Maharashtra, India
+
+EMPLOYEE DETAILS:
+Full Name: Rajesh Kumar Sharma
+Email: rajesh.sharma@apextechnologies.com
+Personal Email: rajesh_sharma99@gmail.com
+Phone Number: +91 9876543210
+Alternate Phone: 9812382351
+
+IDENTIFICATION DOCUMENTS:
+Aadhaar Card: 4321 8765 2109
+PAN Card: ABCDE1234F
+US Social Security Number (SSN): 123-45-6789
+
+FINANCIAL INFORMATION:
+Corporate Credit Card: 4532-7589-1234-5678
+Visa Debit Card: 5123 4567 8901 2345
+
+CLIENT REFERENCE:
+Point of Contact: Dr. Michael Vance
+Company: Vertex Innovations LLC
+Office Location: San Francisco, California
+Contact Email: m.vance@vertexinnovations.org
+Direct Line: +1 415-555-2671
+
+ADDITIONAL NOTES:
+Mr. Rajesh Sharma has submitted all KYC documentation for cross-border payroll processing.
+Please ensure all sensitive identity records are redacted before forwarding this document.`;
 
 export default function UploadFile() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const handleLoadSample = () => {
+    const sampleFile = new File([SAMPLE_TEST_TEXT], 'test.txt', { type: 'text/plain' });
+    setFile(sampleFile);
+    setErrorMessage('');
+    setScanResult(null);
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
@@ -60,7 +101,16 @@ export default function UploadFile() {
           
           {/* Left Block: Ingestion File Control Card */}
           <div className="lg:col-span-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm shadow-slate-100">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 font-mono">Ingestion Source</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">Ingestion Source</h3>
+              <button
+                type="button"
+                onClick={handleLoadSample}
+                className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Sparkles className="h-3 w-3 text-blue-600" /> Use Sample test.txt
+              </button>
+            </div>
             
             <form onSubmit={executeDataShieldScan} className="space-y-4">
               <div className="group border border-dashed border-slate-200 hover:border-blue-500 hover:bg-blue-50/30 rounded-xl p-8 text-center transition-all cursor-pointer relative bg-slate-50/50">

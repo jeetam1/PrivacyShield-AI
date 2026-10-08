@@ -20,13 +20,21 @@ export const scannerService = {
   // Health check
   getHealth: () => API.get('scanner/health/'),
 
-  // PDF Masking & Redaction
+  // PDF & Document Masking / Redaction
   maskPdf: (formData) => API.post('scanner/mask-pdf/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
 
   // Raw Text Masking
   maskText: (payload) => API.post('scanner/mask-text/', payload, {
+    headers: { 'Content-Type': 'application/json' },
+  }),
+
+  // Compatibility aliases
+  upload: (formData) => API.post('scanner/mask-pdf/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  scan: (payload) => API.post('scanner/mask-text/', payload, {
     headers: { 'Content-Type': 'application/json' },
   }),
 };

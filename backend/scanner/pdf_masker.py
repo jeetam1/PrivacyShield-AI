@@ -4,14 +4,17 @@ import pymupdf as fitz
 import spacy
 from .risk_calculator import calculate_risk
 
-# Load lightweight spaCy English model safely
+# Load lightweight spaCy English model with only NER enabled for speed
 try:
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
 except Exception:
     import en_core_web_sm
     nlp = en_core_web_sm.load()
+    for pipe_name in ["tagger", "parser", "attribute_ruler", "lemmatizer"]:
+        if pipe_name in nlp.pipe_names:
+            nlp.disable_pipe(pipe_name)
 
-# Precompiled Regex Patterns for High-Precision Matching
+# Precompiled Regex Patterns for High-Precision and Fast Matching
 PATTERNS = {
     "emails": re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'),
     "phones": re.compile(r'(?:\+91[\-\s]?)?[6-9]\d{9}|(?:\+?1[\-\s]?)?\(?\d{3}\)?[\-\s]?\d{3}[\-\s]?\d{4}|\b(?:\+?\d{1,3}[\-\s]?)?[6-9]\d{9}\b|0\d{2,4}[\-\s]?\d{6,8}'),
@@ -47,7 +50,14 @@ IGNORED_HEADING_KEYWORDS = (
 def extract_pii_from_text(text, options=None):
     """
     Extracts all PII entities and their categories from a given text string.
+    High-speed implementation with conditional NLP execution.
     """
+    if not text:
+        return [], {
+            "emails": 0, "phones": 0, "aadhaar": 0, "pan": 0,
+            "ssn": 0, "credit_card": 0, "names": 0, "locations": 0, "organizations": 0
+        }
+
     if options is None:
         options = {
             "emails": True,
@@ -102,32 +112,37 @@ def extract_pii_from_text(text, options=None):
                 detected_counts["phones"] += 1
                 detected_tokens.append((tok, "phone"))
 
-    # 2. NLP Named Entity Recognition
-    doc = nlp(text)
-    for ent in doc.ents:
-        ent_text = ent.text.strip()
-        ent_lower = ent_text.lower()
-        if (
-            not ent_text 
-            or len(ent_text) < 2 
-            or ent_lower in STRUCTURAL_SAFELIST
-            or any(keyword in ent_lower for keyword in IGNORED_HEADING_KEYWORDS)
-            or "xxxx" in ent_lower
-            or "masked" in ent_lower
-            or "\n" in ent_text
-        ):
-            continue
+    # 2. Fast NLP Named Entity Recognition (Conditional Execution)
+    check_names = options.get("names", True)
+    check_locations = options.get("locations", True)
+    check_orgs = options.get("orgs", False) or options.get("organizations", False)
 
-        if options.get("names", True) and ent.label_ == "PERSON":
-            detected_counts["names"] += 1
-            detected_tokens.append((ent_text, "name"))
-        elif options.get("locations", True) and ent.label_ in ["GPE", "LOC"]:
-            detected_counts["locations"] += 1
-            detected_tokens.append((ent_text, "location"))
-        elif options.get("orgs", False) and ent.label_ == "ORG":
-            if "MASKED" not in ent_text and "XXXX" not in ent_text:
-                detected_counts["organizations"] += 1
-                detected_tokens.append((ent_text, "organization"))
+    if check_names or check_locations or check_orgs:
+        doc = nlp(text)
+        for ent in doc.ents:
+            ent_text = ent.text.strip()
+            ent_lower = ent_text.lower()
+            if (
+                not ent_text 
+                or len(ent_text) < 2 
+                or ent_lower in STRUCTURAL_SAFELIST
+                or any(keyword in ent_lower for keyword in IGNORED_HEADING_KEYWORDS)
+                or "xxxx" in ent_lower
+                or "masked" in ent_lower
+                or "\n" in ent_text
+            ):
+                continue
+
+            if check_names and ent.label_ == "PERSON":
+                detected_counts["names"] += 1
+                detected_tokens.append((ent_text, "name"))
+            elif check_locations and ent.label_ in ["GPE", "LOC"]:
+                detected_counts["locations"] += 1
+                detected_tokens.append((ent_text, "location"))
+            elif check_orgs and ent.label_ == "ORG":
+                if "MASKED" not in ent_text and "XXXX" not in ent_text:
+                    detected_counts["organizations"] += 1
+                    detected_tokens.append((ent_text, "organization"))
 
     # De-duplicate while preserving order, prioritize longer strings first
     unique_tokens = []
@@ -178,6 +193,8 @@ def redact_pdf_stream(pdf_bytes, options=None, redaction_style="xxxx"):
     for page_num in range(total_pages):
         page = doc[page_num]
         page_text = page.get_text()
+        if not page_text.strip():
+            continue
 
         # Extract PII tokens present on this page
         page_tokens, counts = extract_pii_from_text(page_text, options)
@@ -238,9 +255,9 @@ def redact_pdf_stream(pdf_bytes, options=None, redaction_style="xxxx"):
         # Commit redactions permanently on the page
         page.apply_redactions()
 
-    # Save redacted PDF to memory stream
+    # Save redacted PDF to memory stream with fast compression
     output_stream = io.BytesIO()
-    doc.save(output_stream, garbage=4, deflate=True)
+    doc.save(output_stream, garbage=1, deflate=True)
     doc.close()
     
     redacted_pdf_bytes = output_stream.getvalue()
@@ -271,7 +288,7 @@ def text_to_formatted_pdf(masked_text):
     line_height = 16
     lines_per_page = int(content_height / line_height)
 
-    lines = masked_text.splitlines()
+    lines = masked_text.splitlines() if masked_text else [""]
     total_lines = len(lines)
     
     for page_start in range(0, max(1, total_lines), lines_per_page):
@@ -302,5 +319,3 @@ def text_to_pdf_bytes(text_str):
     Fallback converter from raw text to PDF.
     """
     return text_to_formatted_pdf(text_str)
-
-
